@@ -1,0 +1,34 @@
+services:
+  # Web Service running the Node.js Telegram Bot and Webhook
+  - type: web
+    name: deultimateadsolution-bot
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npm run db:generate && npm run build
+    preDeployCommand: npm run db:deploy || npm run db:push
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      # Automatically link PostgreSQL database created below
+      - key: DATABASE_URL
+        fromDatabase:
+          name: deultimate-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      # Only these two variables need to be set manually in Render Dashboard:
+      # - BOT_TOKEN
+      # - ADMIN_IDS
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_IDS
+        sync: false
+
+databases:
+  # Managed PostgreSQL Database on Render
+  - name: deultimate-db
+    plan: starter
+    region: oregon
+    databaseName: deultimatedb
+    user: deultimate_user

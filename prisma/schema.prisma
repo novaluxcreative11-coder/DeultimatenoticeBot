@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum ServiceRequestStatus {
+  SUBMITTED
+  CONTACTED
+  CONVERTED_TO_ORDER
+  CANCELLED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  AWAITING_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum OrderStatus {
+  PENDING
+  UNDER_REVIEW
+  IN_PROGRESS
+  AWAITING_CUSTOMER
+  COMPLETED
+  CANCELLED
+}
+
+enum TutorialCategory {
+  TELEGRAM_ADS
+  TIKTOK_ADS
+  ACCOUNT_TROUBLESHOOTING
+  CAMPAIGN_OPTIMIZATION
+  DIGITAL_MARKETING_TIPS
+}
+
+model User {
+  id              String           @id @default(uuid())
+  telegramId      BigInt           @unique
+  username        String?
+  firstName       String?
+  lastName        String?
+  role            Role             @default(CUSTOMER)
+  isSubscribed    Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  serviceRequests ServiceRequest[]
+  tickets         SupportTicket[]
+  ticketMessages  TicketMessage[]
+  orders          Order[]
+
+  @@index([telegramId])
+  @@index([role])
+}
+
+model ServiceRequest {
+  id              String               @id @default(uuid())
+  reference       String               @unique // e.g. REQ-98214
+  userId          String
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerName    String
+  platform        String               // "Telegram Ads", "TikTok Ads", etc.
+  serviceTitle    String               // Service requested
+  objective       String               // Campaign objective
+  budgetRange     String               // Budget range
+  details         String?              // Additional project details
+  status          ServiceRequestStatus @default(SUBMITTED)
+  adminNotes      String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  orders          Order[]
+
+  @@index([reference])
+  @@index([userId])
+}
+
+model SupportTicket {
+  id              String          @id @default(uuid())
+  reference       String          @unique // e.g. TCK-12845
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform        String          // e.g. "Telegram Ads", "TikTok Ads"
+  issueType       String          // e.g. "Account Banned/Rejected", "Billing", "Ad Approval"
+  errorMessage    String?
+  startedAt       String?         // When the issue started
+  screenshotFileId String?        // Telegram file_id
+  status          TicketStatus    @default(OPEN)
+  assignedAdminId String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  messages        TicketMessage[]
+
+  @@index([reference])
+  @@index([userId])
+  @@index([status])
+}
+
+model TicketMessage {
+  id              String        @id @default(uuid())
+  ticketId        String
+  ticket          SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderRole      Role          @default(CUSTOMER)
+  content         String?
+  mediaFileId     String?
+  mediaType       String?       // "photo", "document", etc.
+  createdAt       DateTime      @default(now())
+
+  @@index([ticketId])
+  @@index([senderId])
+}
+
+model Order {
+  id              String          @id @default(uuid())
+  reference       String          @unique // e.g. ORD-54321
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceRequestId String?
+  serviceRequest  ServiceRequest? @relation(fields: [serviceRequestId], references: [id], onDelete: SetNull)
+  serviceTitle    String
+  platform        String
+  status          OrderStatus     @default(PENDING)
+  notes           String?         // Latest administrator progress notes
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  updates         OrderUpdate[]
+
+  @@index([reference])
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderUpdate {
+  id              String      @id @default(uuid())
+  orderId         String
+  order           Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  previousStatus  OrderStatus
+  newStatus       OrderStatus
+  adminNotes      String?
+  updatedByAdminId BigInt?
+  createdAt       DateTime    @default(now())
+
+  @@index([orderId])
+}
+
+model Tutorial {
+  id              String           @id @default(uuid())
+  category        TutorialCategory
+  title           String
+  description     String
+  videoUrl        String?
+  articleUrl      String?
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model Announcement {
+  id              String    @id @default(uuid())
+  title           String?
+  content         String
+  mediaFileId     String?
+  sentCount       Int       @default(0)
+  failedCount     Int       @default(0)
+  totalSubscribers Int      @default(0)
+  sentByAdminId   BigInt
+  createdAt       DateTime  @default(now())
+}
+
+model ProcessedUpdate {
+  updateId        BigInt    @id
+  processedAt     DateTime  @default(now())
+
+  @@index([processedAt])
+}
