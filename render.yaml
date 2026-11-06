@@ -3,7 +3,7 @@ services:
   - type: web
     name: deultimateadsolution-bot
     runtime: node
-    plan: starter
+    plan: 0.5c-512mb
     region: oregon
     buildCommand: npm install && npm run db:generate && npm run build
     preDeployCommand: npm run db:deploy || npm run db:push
@@ -28,7 +28,7 @@ services:
 databases:
   # Managed PostgreSQL Database on Render
   - name: deultimate-db
-    plan: starter
+    plan: 0.1c-256mb
     region: oregon
     databaseName: deultimatedb
     user: deultimate_user
