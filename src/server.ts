@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { webhookCallback } from 'grammy';
 import { Bot } from 'grammy';
 import { BotContext } from './types/context.js';
@@ -57,7 +57,7 @@ export function createExpressApp(bot: Bot<BotContext>): express.Express {
     app.use(
       config.webhookPath,
       express.json(),
-      (req: Request, res: Response, next) => {
+      (req: Request, res: Response, next: NextFunction) => {
         // Validate Telegram secret token if present
         const secretHeader = req.headers['x-telegram-bot-api-secret-token'];
         if (config.isProduction && secretHeader && secretHeader !== config.webhookSecret) {

@@ -28,6 +28,8 @@
     "@grammyjs/conversations": "^2.1.1",
     "@grammyjs/runner": "^2.0.3",
     "@prisma/client": "^6.4.1",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "grammy": "^1.35.0",
@@ -35,8 +37,6 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.13.5",
     "@types/supertest": "^6.0.2",
     "pino-pretty": "^13.0.0",
     "prisma": "^6.4.1",
