@@ -42,7 +42,10 @@ export function loadConfig(): AppConfig {
   const port = parseInt(process.env.PORT || '3000', 10);
   const nodeEnv = process.env.NODE_ENV || 'production';
   const databaseUrl = process.env.DATABASE_URL || '';
-  const renderExternalUrl = process.env.RENDER_EXTERNAL_URL?.trim();
+  let renderExternalUrl = process.env.RENDER_EXTERNAL_URL?.trim();
+  if (!renderExternalUrl && process.env.RENDER_EXTERNAL_HOSTNAME) {
+    renderExternalUrl = `https://${process.env.RENDER_EXTERNAL_HOSTNAME.trim()}`;
+  }
   const webhookPath = process.env.WEBHOOK_PATH || '/telegram-webhook';
   const webhookSecret = process.env.WEBHOOK_SECRET || (botToken ? deriveWebhookSecret(botToken) : 'default_secret');
 

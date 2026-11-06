@@ -12,7 +12,11 @@ async function bootstrap() {
   try {
     await prisma.$connect();
     logger.info('Database connected successfully');
-    await TutorialService.seedDefaultTutorials();
+    try {
+      await TutorialService.seedDefaultTutorials();
+    } catch (seedErr: any) {
+      logger.warn({ err: seedErr?.message }, 'Could not seed tutorials (tables may be pending migration)');
+    }
   } catch (err: any) {
     logger.warn({ err: err?.message }, 'Database connection deferred or pending initialization');
   }

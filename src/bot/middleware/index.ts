@@ -66,10 +66,14 @@ export async function deduplicateUpdateMiddleware(ctx: BotContext, next: NextFun
     await prisma.processedUpdate.create({
       data: { updateId: BigInt(updateId) },
     });
-  } catch (err) {
-    // If update already exists or database throws unique violation, ignore update
-    logger.warn({ updateId, err }, 'Skipped update on unique constraint');
-    return;
+  } catch (err: any) {
+    // If unique constraint violation (code P2002), it is a genuine duplicate
+    if (err?.code === 'P2002') {
+      logger.warn({ updateId }, 'Skipped update on unique constraint violation');
+      return;
+    }
+    // For other unexpected database errors (e.g. cold start, reconnecting), log error and allow update processing
+    logger.error({ updateId, err: err?.message }, 'Error checking ProcessedUpdate in deduplication middleware; allowing update through');
   }
 
   return next();

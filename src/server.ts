@@ -55,18 +55,11 @@ export function createExpressApp(bot: Bot<BotContext>): express.Express {
   // Telegram webhook route
   if (config.botToken) {
     app.use(
+      express.json()
+    );
+
+    app.use(
       config.webhookPath,
-      express.json(),
-      (req: Request, res: Response, next: NextFunction) => {
-        // Validate Telegram secret token if present
-        const secretHeader = req.headers['x-telegram-bot-api-secret-token'];
-        if (config.isProduction && secretHeader && secretHeader !== config.webhookSecret) {
-          logger.warn('Unauthorized webhook request rejected: Secret mismatch');
-          res.status(401).send('Unauthorized');
-          return;
-        }
-        next();
-      },
       webhookCallback(bot, 'express', {
         secretToken: config.webhookSecret,
       })
